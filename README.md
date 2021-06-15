@@ -7,13 +7,21 @@ To start your Phoenix server:
 
 ## How it works
 
-- This cache uses a library to implement the LRU cache: https://github.com/arago/lru_cache
-- The underlying cache is actually ETS (Erlang Term Storage).
+- The underlying cache is ETS (Erlang Term Storage).
 - Writing to the ETS table is done though an Agent (Genserver).
 - This is important because of the LRU eviction policy.
 - ETS supports write concurrency via bucketing. This increases mutex granularity. The important part is updating the cache requires updating both the key/value pair and also the order in which keys are updated atomically, hence why it is done in the Agent where the single process acts as a critical section.
 - The Agents (processes) message queue ensures clients get responses in the right order (FIFO) so another client writing to the cache does not invalidate the LRU order.
 - Read concurrency is turned on to enable concurrent reads. Updating the LRU order is then done in the Agent again.
+
+## Other Designs
+
+- I actually wanted to see if we could avoid the Agent. This had a manjor issue that cleanup would not happen in the event of a large number of concurrent writes.
+- A possibility to have concurrent writes is to have a 3rd ETS table act as a garbage collection mutex.
+- After a set timeout period. The Agent will send a message to itself to write a single entry to this third cache.
+- This entry acts as a mutex to block reads and writes while the Agent clears a large portion of the cache.
+- In the meanwhile you only add entries to the time table while doing a put.
+- It was also possible to use the Agents state as the cache. This has the downside of making reads non-concurrent and the GenServer is not optomized to store large amounts of data in its state unlike ETS.
 
 ## How to use it
 - Run the server: `CACHE_SIZE=3 mix phx.server`

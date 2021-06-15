@@ -13,7 +13,7 @@ defmodule Cache.Application do
       {Phoenix.PubSub, name: Cache.PubSub},
       # Start the Endpoint (http/https)
       CacheWeb.Endpoint,
-      Supervisor.Spec.worker(LruCache, [:main_cache, cache_size()])
+      {Cache.LruCache, cache_size()}
       # Start a worker by calling: Cache.Worker.start_link(arg)
       # {Cache.Worker, arg}
     ]

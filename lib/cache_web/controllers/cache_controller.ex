@@ -1,11 +1,11 @@
 defmodule CacheWeb.CacheController do
   use CacheWeb, :controller
 
-  alias Cache.Cache
+  alias Cache.LruCache
 
   def get(conn, %{"key" => key}) do
     result = %{
-      value: Cache.get(key)
+      value: LruCache.get(key)
     }
 
     json(conn, result)
@@ -19,7 +19,7 @@ defmodule CacheWeb.CacheController do
   end
 
   def put(conn, %{"key" => key, "value" => value}) do
-    Cache.put(key, value)
+    LruCache.put(key, value)
     json(conn, :ok)
   end
 
